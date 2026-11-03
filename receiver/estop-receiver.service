@@ -1,0 +1,25 @@
+# systemd unit for the RK3588. Install:
+#   sudo cp estop-receiver.service /etc/systemd/system/
+#   (edit WorkingDirectory and --pin below first)
+#   sudo systemctl daemon-reload && sudo systemctl enable --now estop-receiver
+# Logs:   journalctl -u estop-receiver -f
+# Reset:  python3 estopctl.py reset
+#
+# If the process dies, the pin is released and the 10k gate pull-down on the
+# PDB keeps the contactor open. systemd restarts it, and it comes back in BOOT
+# (power off) - a restart never re-powers the robot without a reset.
+
+[Unit]
+Description=Wireless E-stop receiver
+After=network-online.target NetworkManager.service
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/opt/wireless-estop/receiver
+ExecStart=/usr/bin/python3 -u receiver.py --gpio gpiod --pin GPIO1_B2
+Restart=always
+RestartSec=1
+StandardInput=null
+
+[Install]
+WantedBy=multi-user.target

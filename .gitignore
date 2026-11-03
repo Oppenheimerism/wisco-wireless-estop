@@ -1,0 +1,10 @@
+# ESP-IDF build output and the generated config (may hold your Wi-Fi password)
+esp32_transmitter/build/
+esp32_transmitter/sdkconfig
+esp32_transmitter/sdkconfig.old
+esp32_transmitter/managed_components/
+esp32_transmitter/dependencies.lock
+
+__pycache__/
+*.pyc
+.DS_Store
