@@ -66,6 +66,6 @@ class GpiodOutput:
 
     def close(self):
         self.set(False)
-        # After release the kernel no longer drives the pin. The 10k gate
-        # pull-down on the PDB is what keeps power off from here on.
+        # What the pin does after release is up to the kernel/driver; we set it
+        # LOW first. A hard crash skips this entirely (see README).
         self._req.release()

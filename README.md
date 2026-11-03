@@ -124,10 +124,14 @@ sudo systemctl daemon-reload && sudo systemctl enable --now estop-receiver
 journalctl -u estop-receiver -f
 ```
 
-If the receiver crashes or the board reboots, the pin is no longer driven and the
-**10 kΩ gate pull-down** keeps the contactor open; systemd restarts the receiver
-in BOOT (power off). Check on the real board that the chosen pin does not float
-HIGH or get pulled up during boot before the service starts.
+On a normal stop (Ctrl+C, `systemctl stop`, SIGTERM) the receiver drives the pin LOW
+before exiting. **On a hard crash (SIGKILL, OOM kill, kernel hang) that cleanup never
+runs, and Linux does not guarantee what a released GPIO output does — it may stay
+HIGH.** Then power stays on with nothing watching the heartbeat. The 10 kΩ gate
+pull-down only helps if the pin actually goes high-impedance. Options to close this
+gap (needs a decision with the PDB owner): a hardware watchdog / charge-pump so the
+gate needs a *toggling* signal to stay on, or an independent watchdog that cuts power.
+Also check on the real board what the chosen pin does during boot, before the service starts.
 
 ## Testing without hardware
 
@@ -156,4 +160,7 @@ receiver IP and the laptop's Wi-Fi as the SSID, then run `receiver.py` on the la
    The requirement is "either one alone cuts power". From the low-res image it looks like a
    parallel connection, where GPIO HIGH might keep the gate on even with the button pressed.
    Worth checking with whoever owns the PDB schematic.
-3. Handheld power (battery) and enclosure.
+3. **Crash with the pin stuck HIGH** (see "RK3588" above): needs a hardware watchdog or similar.
+4. **A short in the button wiring** (pin shorted to GND) reads as "not pressed" forever; the NC
+   contact catches a cut wire but not a short. Commercial E-stops use two channels for this.
+5. Handheld power (battery) and enclosure.

@@ -5,9 +5,9 @@
 # Logs:   journalctl -u estop-receiver -f
 # Reset:  python3 estopctl.py reset
 #
-# If the process dies, the pin is released and the 10k gate pull-down on the
-# PDB keeps the contactor open. systemd restarts it, and it comes back in BOOT
-# (power off) - a restart never re-powers the robot without a reset.
+# On SIGTERM the receiver drives the pin LOW before exiting. After a hard crash
+# the released pin's state is NOT guaranteed (may stay HIGH) - see README.
+# systemd restarts it in BOOT (power off); a restart never re-powers without a reset.
 
 [Unit]
 Description=Wireless E-stop receiver
