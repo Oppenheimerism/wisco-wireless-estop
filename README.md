@@ -57,14 +57,17 @@ python3 receiver/estop_receiver.py reset      # terminal 3
 
 With a real ESP32: put the laptop's IP and a shared 2.4 GHz network in menuconfig.
 
-## Known risks
+## Things to check
 
-1. **Hard crash with the pin stuck HIGH.** On Ctrl+C / SIGTERM the receiver drives LOW first, but
-   after SIGKILL or a kernel hang Linux doesn't guarantee the pin goes LOW. Needs a hardware
-   watchdog (e.g. gate held on only by a toggling signal).
-2. **Schematic:** the on-robot button and the GPIO both feed the MOSFET gate through 100 Ω,
-   which looks like a parallel (OR) connection: with GPIO HIGH, pressing the button may not
-   cut power. Either one alone should cut power.
-3. **A short in the button wiring** reads as "not pressed". NC catches a cut wire, not a short.
-4. Timing (50 / 150 ms) should be checked against real Wi-Fi packet loss (`status` shows `lost`).
-5. Check the chosen pin's state during boot, before the service starts.
+These came up while writing and reviewing the code. None has been confirmed on hardware,
+so treat them as questions rather than findings.
+
+1. **Pin state after a hard crash.** On Ctrl+C / SIGTERM the receiver drives the pin LOW first.
+   After SIGKILL or a kernel hang, Linux may not guarantee that, so the pin could stay HIGH.
+   A hardware watchdog (e.g. gate held on only by a toggling signal) would cover this, if needed.
+2. **Schematic:** the on-robot button and the GPIO both seem to feed the MOSFET gate through
+   100 Ω (from a low-res image). If that is a parallel (OR) connection, GPIO HIGH might keep
+   the gate on with the button pressed. Intended behavior: either one alone cuts power.
+3. A short in the button wiring would read as "not pressed" (NC catches a cut wire, not a short).
+4. 50 / 150 ms timing vs. real Wi-Fi packet loss (`status` shows `lost`).
+5. The chosen pin's state during boot, before the service starts.
