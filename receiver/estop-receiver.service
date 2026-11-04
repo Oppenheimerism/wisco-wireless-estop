@@ -1,9 +1,9 @@
 # systemd unit for the RK3588. Install:
 #   sudo cp estop-receiver.service /etc/systemd/system/
-#   (edit WorkingDirectory and --pin below first)
+#   (edit WorkingDirectory and --pin below first; GPIO1_B2 is a placeholder)
 #   sudo systemctl daemon-reload && sudo systemctl enable --now estop-receiver
 # Logs:   journalctl -u estop-receiver -f
-# Reset:  python3 estopctl.py reset
+# Reset:  python3 estop_receiver.py reset
 #
 # On SIGTERM the receiver drives the pin LOW before exiting. After a hard crash
 # the released pin's state is NOT guaranteed (may stay HIGH) - see README.
@@ -16,7 +16,7 @@ Wants=network-online.target
 
 [Service]
 WorkingDirectory=/opt/wireless-estop/receiver
-ExecStart=/usr/bin/python3 -u receiver.py --gpio gpiod --pin GPIO1_B2
+ExecStart=/usr/bin/python3 -u estop_receiver.py run --gpio gpiod --pin GPIO1_B2
 Restart=always
 RestartSec=1
 StandardInput=null
