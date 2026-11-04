@@ -6,8 +6,24 @@ Handheld ESP32-S3 → Wi-Fi (UDP) → RK3588 → E-stop GPIO → MOSFET → 48 V
 - RK3588 keeps the GPIO **HIGH only while ALIVEs keep arriving**. STOP, or 150 ms of silence
   (dead battery, crash, out of range), drives it LOW and **latches** until someone runs `reset`.
 
-**Status:** firmware builds (ESP-IDF v5.5.4, ESP32-S3) but has not run on hardware yet.
-Receiver logic is tested on a laptop. `GpiodOutput` (the real pin) is untested.
+**Status (2026-11-03):** tested end to end on an ESP32-S3 dev board → phone hotspot → laptop
+(receiver with printed GPIO; a jumper GPIO 4–GND as the NC button). Not yet tested on an RK3588;
+`GpiodOutput` (the real pin) is untested.
+
+| Test | Result |
+|---|---|
+| Arm after 5 heartbeats + `reset` | power on |
+| Pull jumper (button pressed) | cut + latched immediately on first STOP |
+| `reset` while pulled | refused ("release the E-stop button first") |
+| Reinsert jumper, `reset` | power on |
+| Unplug ESP32 USB | cut + latched after 153 ms |
+| ESP32 reboots and reconnects | link healthy, power stays off until `reset` |
+| Packet loss (~9,200 packets, ~7 min) | 2 lost |
+
+**Nuisance trips:** with ESP32 → phone hotspot → laptop (two Wi-Fi hops), heartbeats sometimes
+arrived 150+ ms late and then in a burst (ESP32 stayed connected; packets were delayed, not lost).
+That tripped the 150 ms timeout about once every 1–2 minutes. It fails safe (stops), but the
+timeout needs re-checking on the real setup, where the RK3588 is the access point (one hop).
 
 ## Layout
 
@@ -69,5 +85,5 @@ so treat them as questions rather than findings.
    100 Ω (from a low-res image). If that is a parallel (OR) connection, GPIO HIGH might keep
    the gate on with the button pressed. Intended behavior: either one alone cuts power.
 3. A short in the button wiring would read as "not pressed" (NC catches a cut wire, not a short).
-4. 50 / 150 ms timing vs. real Wi-Fi packet loss (`status` shows `lost`).
+4. 50 / 150 ms timing on the real RK3588 hotspot (see "Nuisance trips" above).
 5. The chosen pin's state during boot, before the service starts.
